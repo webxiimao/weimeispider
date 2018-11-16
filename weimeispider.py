@@ -7,7 +7,7 @@ from Download import request
 
 
 
-connect = create_connect('root','root','flaskstudy')
+connect = create_connect('root','myy436627','flaskstudy')
 base_url = "http://www.mmonly.cc"
 
 def weimeispider():
@@ -80,9 +80,10 @@ def find_max_img_page(img_tree):
     pages_list = img_tree.xpath("//div[@class='pages']/ul/li")
     max = 0
     if len(pages_list) > 1:
-        max_page = pages_list[-2].xpath('a')[0]
+        max_page = pages_list[0].xpath('a')[0].text
+        print(max_page)
         if max_page:
-            max = int(re.match(r'\S+_(\d+).html', max_page).group(1))
+            max = int(re.match(r'¹²(\d+)\S+', max_page).group(1))
     return max
 
 
@@ -90,7 +91,7 @@ def handle_all_img(url, max, img_tree,id,init_url, num=1):
     if init_url != url:
         img_tree = request_url(url)
     print(url,max)
-    if int(num) <= int(max):
+    if int(num) < int(max):
         img = img_tree.xpath("//div[@id='big-pic']/p/a/img")
         if len(img)>0:
             img_url = img[0].xpath("@src")
