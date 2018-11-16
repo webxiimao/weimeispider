@@ -22,7 +22,7 @@ def weimeispider():
 
 
 
-def album_handle(url,tag):
+def album_handle(url,tag,num=1):
     '''
     相册表的处理
     :param url:
@@ -41,17 +41,28 @@ def album_handle(url,tag):
     #全页数处理逻辑
     max = get_all_album_page(album_tree)
     #album逻辑处理
+    handle_all_page_album(url, max, album_tree, id, url)
 
+
+def handle_all_page_album(url, max, album_tree, id, init_url, num=1):
+    if init_url != url:
+        album_tree = request_url(url)
     albums = album_tree.xpath("//div[@class='ABox']//a")
     for album in albums:
         title = album.xpath('img/@alt')[0]
-        url = album.xpath('@href')[0]
+        album_url = album.xpath('@href')[0]
         cover = album.xpath('img/@src')[0]
-        img_handle(url, title, cover ,id)
+        img_handle(album_url, title, cover, id)
+    num += 1
+    if int(num) > int(max):
+        return
+    new_url = "%s%s.html" % (init_url, num)
+    # print(url, num, new_url)
+    handle_all_page_album(new_url, max,album_tree, id, init_url=init_url, num=num)
+
 
 def img_handle(url, title, cover ,id):
     img_tree = request_url(url)
-
     album_discription = img_tree.xpath("//div[@class='descriptionBox']/p")[0].text if len(img_tree.xpath("//div[@class='descriptionBox']/p"))>0 else ""
     cursor = connect.cursor()
     sql = "insert into girls_album(title,cover_img,description,girls_tag_id) values(%s,%s,%s,%s)"
@@ -59,6 +70,47 @@ def img_handle(url, title, cover ,id):
     id = int(cursor.lastrowid)
     cursor.close()
     connect.commit()
+
+    max = find_max_img_page(img_tree)
+    handle_all_img(url,max, img_tree, id, url)
+
+
+def find_max_img_page(img_tree):
+    # 找到最大页数
+    pages_list = img_tree.xpath("//div[@class='pages']/ul/li")
+    max = 0
+    if len(pages_list) > 1:
+        max_page = pages_list[-2].xpath('a')[0]
+        if max_page:
+            max = int(re.match(r'\S+_(\d+).html', max_page).group(1))
+    return max
+
+
+def handle_all_img(url, max, img_tree,id,init_url, num=1):
+    if init_url != url:
+        img_tree = request_url(url)
+    print(url,max)
+    if int(num) <= int(max):
+        img = img_tree.xpath("//div[@id='big-pic']/p/a/img")
+        if len(img)>0:
+            img_url = img[0].xpath("@src")
+            if len(img_url)>0:
+                # print(img_url)
+                img_path = re.match(r'\S+/uploads/(\S+)',img_url[0]).group(1)
+                cursor = connect.cursor()
+                sql = "insert into girls_img( img_url,img_status, girls_album_id) values(%s,%s,%s)"
+                cursor.execute(sql, [img_url[0],1, id])
+                cursor.close()
+                connect.commit()
+
+        num += 1
+        new_url = "%s_%s.html"%(re.match(r'(\S+).html',init_url).group(1), num)
+        print(new_url)
+        handle_all_img(new_url, max, img_tree, id, init_url, num)
+
+
+
+
 
 
 
@@ -94,11 +146,6 @@ def handle_tags(tags):
 def sql_run(sql, params=None):
     #mysql多数据处理
     pass
-
-
-
-
-
 
 
 
