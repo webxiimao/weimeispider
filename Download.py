@@ -124,7 +124,8 @@ class download(object):
                         return self.get(url, timeout, proxy, num_retries - 1)
                     else:
                         print(u'代理也不好使了！取消代理')
-                        return self.get(url, 3)
+                        # return self.get(url, 3)
+                        return False
             except:
 
                 if num_retries > 0:
@@ -136,7 +137,7 @@ class download(object):
                     return self.get(url, timeout, proxy, num_retries - 1)
                 else:
                     print(u'代理也不好使了！取消代理')
-                    return self.get(url, 3)
+                    return False
 
 
 

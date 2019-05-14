@@ -97,7 +97,7 @@ def handle_all_img(url, max, img_tree,id,init_url, num=1):
             img_url = img[0].xpath("@src")
             if len(img_url)>0:
                 # print(img_url)
-                img_path = re.match(r'\S+/uploads/(\S+)',img_url[0]).group(1)
+                # img_path = re.match(r'\S+/uploads/(\S+)',img_url[0]).group(1)
                 cursor = connect.cursor()
                 sql = "insert into girls_img( img_url,img_status, girls_album_id) values(%s,%s,%s)"
                 cursor.execute(sql, [img_url[0],1, id])
